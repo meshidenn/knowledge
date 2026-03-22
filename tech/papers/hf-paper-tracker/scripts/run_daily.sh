@@ -27,19 +27,19 @@ if [ -f "$OUTPUT_FILE" ]; then
 fi
 
 # --- Step 2: HF API からデータ取得 ---
-echo "[1/4] Fetching papers..."
-python3 scripts/fetch_papers.py
+echo "[1/5] Fetching papers..."
+uv run scripts/fetch_papers.py
 
 if [ ! -f "$RAW_FILE" ]; then
     echo "[ERROR] Failed to fetch papers"
     exit 1
 fi
 
-PAPER_COUNT=$(python3 -c "import json; print(json.load(open('$RAW_FILE'))['count'])")
+PAPER_COUNT=$(uv run python -c "import json; print(json.load(open('$RAW_FILE'))['count'])")
 echo "[OK] Fetched $PAPER_COUNT papers"
 
 # --- Step 3: Claude Code で分析 ---
-echo "[2/4] Analyzing with Claude Code..."
+echo "[2/5] Analyzing with Claude Code..."
 
 claude -p "
 $RAW_FILE を読んで、日次インテークを実行してください。
@@ -66,12 +66,16 @@ fi
 
 echo "[OK] Saved to $OUTPUT_FILE"
 
+# --- Step 3b: スキップ論文に arXiv リンクを付与（raw JSON と突き合わせ・本文 URL 済みは除外） ---
+echo "[3/5] Enriching skip section with arXiv links..."
+uv run scripts/enrich_skip_links.py "$OUTPUT_FILE" "$RAW_FILE"
+
 # --- Step 4: メール送信 ---
-echo "[3/4] Sending email..."
-python3 scripts/send_email.py "$OUTPUT_FILE"
+echo "[4/5] Sending email..."
+uv run scripts/send_email.py "$OUTPUT_FILE"
 
 # --- Step 5: Git コミット & プッシュ ---
-echo "[4/4] Committing..."
+echo "[5/5] Committing..."
 git add papers/ logs/
 if ! git diff --staged --quiet; then
     git commit -m "📄 ${DATE} daily intake"

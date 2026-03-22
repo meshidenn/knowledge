@@ -1,3 +1,9 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "requests>=2.32.5",
+# ]
+# ///
 """
 HF Daily Papers データ取得（LLM呼び出しなし）
 HF API → JSON に保存するだけ

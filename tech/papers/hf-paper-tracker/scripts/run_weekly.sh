@@ -70,7 +70,7 @@ echo "[OK] Saved to $OUTPUT_FILE"
 
 # --- メール送信 ---
 echo "[2/3] Sending email..."
-python3 scripts/send_email.py "$OUTPUT_FILE"
+uv run scripts/send_email.py "$OUTPUT_FILE"
 
 # --- Git コミット & プッシュ ---
 echo "[3/3] Committing..."

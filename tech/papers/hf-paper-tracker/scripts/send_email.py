@@ -1,3 +1,6 @@
+# /// script
+# requires-python = ">=3.11"
+# ///
 """
 Gmail SMTP で分析結果をメール送信
 引数: 送信するMarkdownファイルのパス
@@ -85,6 +88,6 @@ def send_email(filepath: str):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python send_email.py <markdown_file_path>")
+        print("Usage: uv run scripts/send_email.py <markdown_file_path>")
         sys.exit(1)
     send_email(sys.argv[1])

@@ -22,14 +22,23 @@
 | ID | テーマ | スコープ | キーワード |
 |----|--------|----------|------------|
 | T1 | MoE / 効率的アーキテクチャ | Expert Parallelism, ルーティング戦略, 量子化(AWQ/GPTQ/INT4), 推論最適化, MoE upcasting, conditional computation | mixture of experts, sparse model, expert routing, load balancing, speculative decoding, KV cache |
-| T2 | 金融AI / ドメイン特化LLM | 金融テキスト理解, XBRL処理, 決算分析, ドメイン特化FT, ハルシネーション抑制, 構造化出力 | financial NLP, domain adaptation, structured output, compliance, regulatory, tabular reasoning |
-| T3 | マルチエージェント / ツール利用 | エージェントオーケストレーション, ツールコーリング, 計画・推論・自己修正ループ | multi-agent, tool use, function calling, agentic workflow, planning, reflection, code generation |
-| T4 | ファインチューニング / アライメント | LoRA/QLoRA, DPO/KTO/ORPO, 表現崩壊, 勾配フロー, 学習安定性 | SFT, preference optimization, reward model, alignment, representation collapse, data curation |
+| T2 | 金融AI / ドメイン特化LLM | 金融テキスト理解, XBRL処理, 決算分析, ドメイン特化FT, ハルシネーション抑制, 構造化出力, **RAG・検索品質** | financial NLP, domain adaptation, structured output, compliance, regulatory, tabular reasoning, **RAG, dense retrieval, embedding model, text embedding, multilingual embedding, late interaction** |
+| T3 | マルチエージェント / ツール利用 | エージェントオーケストレーション, ツールコーリング, 計画・推論・自己修正ループ, **研究・実験の自動化** | multi-agent, tool use, function calling, agentic workflow, planning, reflection, code generation, **automated scientific discovery, AI scientist, research agent, synthetic task scaling** |
+| T4 | ファインチューニング / アライメント | LoRA/QLoRA, DPO/KTO/ORPO, 表現崩壊, 勾配フロー, 学習安定性, **ドメイン・モダリティ横断のPEFT** | SFT, preference optimization, reward model, alignment, representation collapse, data curation, **PEFT, domain-specific LoRA, VLM fine-tuning, vision-language adapter** |
+
+### 本文で必ず検討する論文タイプ（キーワードだけでスキップしない）
+
+タイトル・アブストに次が含まれる、または明らかにその系統のときは**必ず** T2〜T4 のいずれかに割り当てて本文に載せる。ドメインが医療・一般コーパスでも「金融と無関係」として捨てない。
+
+1. **埋め込み・検索**: embedding、multilingual embedding、text embedding、retrieval、RAG encoder、bi-encoder、late interaction 等 → **T2**（多言語決算・社内RAGの品質に直結）
+2. **ML研究エージェント**: AI Scientist、synthetic task、automated discovery、research agent、experiment loop 等 → **T3**
+3. **ドメイン特化 LoRA / VLM の PEFT**: LoRA/QLoRA/adapter で VLM や垂直ドメインLLMを適応（例: 医療VLM）→ **T4**（金融ドキュメント+VLM への転用手順の参考）。ドメイン適応の主眼なら **T2+T4** も可
 
 ### テーマ判定ルール
 
 - 1つの論文に複数テーマタグを付けてよい（最大2つ）
 - 4テーマいずれにも該当しない論文は基本スキップ
+- 上記「本文で必ず検討する論文タイプ」に該当する場合は、タグ付けがやや曖昧でも **[番外] で逃がさず**、T2〜T4 のいずれかに必ずマッピングする
 - ただし「テーマ外だが重要」と判断した論文は `[番外]` タグで1日最大2本まで拾う
   - 判断基準: HFでのupvote数が突出 / 著者が主要研究グループ / 手法の汎用性が高い
 
@@ -60,6 +69,14 @@
 ### 今日の注目
 - 最も重要な1本: {{タイトル}} — 理由: {{1文}}
 - テーマ横断の兆候: {{あれば1文、なければ「特になし」}}
+```
+
+#### スキップした論文
+- **パイプライン後処理**: `scripts/enrich_skip_links.py` が raw JSON からリンク付きリストに**置換**する（`run_daily.sh` 組み込み済み）
+- モデルは `## スキップした論文` 見出しのみ、または「（スクリプトで生成）」程度のプレースホルダでよい
+```
+## スキップした論文
+（以下はパイプラインが JSON から自動生成）
 ```
 
 ### 重要度の判定基準

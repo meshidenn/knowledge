@@ -23,18 +23,18 @@
 
 2. **金融AI / ドメイン特化LLM**
    - 金融テキスト理解、XBRL処理、決算分析
-   - ドメイン特化ファインチューニング、ハルシネーション抑制
-   - 関連キーワード: financial NLP, domain adaptation, structured output, compliance, regulatory
+   - ドメイン特化ファインチューニング、ハルシネーション抑制、**RAG・埋め込み・検索品質**
+   - 関連キーワード: financial NLP, domain adaptation, structured output, compliance, regulatory, RAG, dense retrieval, embedding model, multilingual embedding
 
 3. **マルチエージェント / ツール利用**
    - エージェントオーケストレーション、ツールコーリング
-   - 計画・推論・自己修正ループ
-   - 関連キーワード: multi-agent, tool use, function calling, agentic workflow, planning
+   - 計画・推論・自己修正ループ、**研究・実験の自動化エージェント**
+   - 関連キーワード: multi-agent, tool use, function calling, agentic workflow, planning, AI scientist, synthetic task scaling, automated scientific discovery
 
 4. **ファインチューニング / RLHF / DPO**
    - LoRA/QLoRA、DPO/KTO/ORPO
-   - 表現崩壊、勾配フロー、学習安定性
-   - 関連キーワード: SFT, preference optimization, reward model, alignment, representation collapse
+   - 表現崩壊、勾配フロー、学習安定性、**ドメイン特化PEFT・VLM適応**
+   - 関連キーワード: SFT, preference optimization, reward model, alignment, representation collapse, PEFT, domain-specific LoRA, VLM fine-tuning
 
 ### 分析の原則
 

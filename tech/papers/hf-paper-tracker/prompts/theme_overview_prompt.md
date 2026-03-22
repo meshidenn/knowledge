@@ -30,13 +30,13 @@ claude "@prompts/theme_overview_prompt.md に沿って、papers/daily と papers
   mixture of experts, sparse model, expert routing, load balancing, speculative decoding, KV cache, quantization, AWQ, GPTQ, INT4
 
 - **T2 金融AI / ドメイン特化LLM**
-  financial NLP, domain adaptation, structured output, compliance, regulatory, tabular reasoning, XBRL
+  financial NLP, domain adaptation, structured output, compliance, regulatory, tabular reasoning, XBRL, RAG, dense retrieval, embedding model, text embedding, multilingual embedding
 
 - **T3 マルチエージェント / ツール利用**
-  multi-agent, tool use, function calling, agentic workflow, planning, reflection, code generation
+  multi-agent, tool use, function calling, agentic workflow, planning, reflection, code generation, automated scientific discovery, AI scientist, research agent, synthetic task scaling
 
 - **T4 ファインチューニング / アライメント**
-  SFT, LoRA, QLoRA, DPO, KTO, ORPO, preference optimization, reward model, alignment, representation collapse
+  SFT, LoRA, QLoRA, DPO, KTO, ORPO, preference optimization, reward model, alignment, representation collapse, PEFT, domain-specific LoRA, VLM fine-tuning, vision-language adapter
 
 ### 読み取りの原則
 

@@ -6,10 +6,11 @@ Hugging Face Daily Papers を自動追跡し、テーマ別に分類・要約・
 
 ```
 cron (ローカルPC)
-  ├── fetch_papers.py      ← HF API からデータ取得（LLM なし）
-  ├── claude -p "..."      ← CLAUDE.md を参照して分析（サブスク認証）
-  ├── send_email.py        ← Gmail SMTP で通知
-  └── git commit/push      ← 結果を papers/ に蓄積
+  ├── uv run fetch_papers.py        ← HF API からデータ取得（LLM なし・依存はスクリプト内 PEP 723）
+  ├── claude -p "..."               ← CLAUDE.md を参照して分析（サブスク認証）
+  ├── uv run enrich_skip_links.py   ← スキップ論文を raw JSON でリンク付きに上書き
+  ├── uv run send_email.py         ← Gmail SMTP で通知
+  └── git commit/push               ← 結果を papers/ に蓄積
 ```
 
 - LLM呼び出しは全て Claude Code CLI 経由（サブスクリプション認証、API KEY 不要）
@@ -24,8 +25,31 @@ cron (ローカルPC)
 git clone <your-repo-url>
 cd hf-paper-tracker
 chmod +x scripts/run_daily.sh scripts/run_weekly.sh
-pip install requests
 ```
+
+Python スクリプトは [uv](https://docs.astral.sh/uv/) の **PEP 723 インライン依存**で実行する（`pyproject.toml` は使わない）。初回実行時に `uv` が依存を解決する。
+
+```bash
+# uv 未導入の場合（公式インストーラ）
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# または: brew install uv
+```
+
+依存の追加・更新はリポジトリ直下で次のようにする（スクリプト先頭の `# /// script` ブロックが更新される）。
+
+```bash
+uv add requests --script scripts/fetch_papers.py
+```
+
+手動実行の例:
+
+```bash
+uv run scripts/fetch_papers.py
+uv run scripts/enrich_skip_links.py papers/daily/2026-03-22.md papers/daily/raw/2026-03-22.json
+uv run scripts/send_email.py papers/daily/2026-03-22.md
+```
+
+既存の日次 `.md` にだけスキップリンクを付け直す場合も上の `enrich_skip_links.py` 行を使う（第1引数: md、第2引数: 同日の raw JSON）。
 
 ### 2. Claude Code にログイン済みであることを確認
 
@@ -56,7 +80,7 @@ EOF
 crontab -e
 ```
 
-以下を追記（パスは実際の場所に置き換え）:
+以下を追記（パスは実際の場所に置き換え）。`uv` が cron の `PATH` に入らない場合は `export PATH="$HOME/.local/bin:$PATH"` などを前置する。
 
 ```cron
 # 日次インテーク（平日朝9:00）
@@ -87,8 +111,9 @@ hf-paper-tracker/
 ├── scripts/
 │   ├── run_daily.sh             ← 日次cron エントリポイント
 │   ├── run_weekly.sh            ← 週次cron エントリポイント
-│   ├── fetch_papers.py          ← HF API → JSON
-│   └── send_email.py            ← Gmail SMTP 送信
+│   ├── fetch_papers.py          ← HF API → JSON（`uv run`・依存はファイル先頭の `/// script`）
+│   ├── enrich_skip_links.py     ← 日次 md の「スキップした論文」を raw JSON でリンク付きに上書き
+│   └── send_email.py            ← Gmail SMTP 送信（同上・標準ライブラリのみ）
 ├── papers/
 │   ├── daily/
 │   │   ├── raw/                 ← 生データ (JSON)
