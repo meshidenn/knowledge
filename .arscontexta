@@ -1,6 +1,6 @@
-# Ars Contexta vault marker + config
-# This file identifies the directory as an Ars Contexta vault.
-# Do not delete — hooks only run when this file exists.
+# Ars Contexta バルトマーカー + 設定
+# このファイルはディレクトリをArs Contextaバルトとして識別します。
+# 削除しないでください — フックはこのファイルが存在する場合のみ実行されます。
 
 git: true
 session_capture: true
