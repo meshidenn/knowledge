@@ -1,0 +1,63 @@
+# ops/config.yaml — このファイルを編集してシステムを調整する
+# 各選択の「なぜ」については ops/derivation.md を参照
+
+dimensions:
+  granularity: atomic
+  organization: flat
+  linking: explicit
+  processing: heavy
+  navigation: 3-tier
+  maintenance: condition-based
+  schema: moderate
+  automation: full
+
+features:
+  semantic-search: false      # qmdをインストール後 true に変更
+  processing-pipeline: true
+  sleep-processing: false
+  voice-capture: false
+
+processing_tier: auto    # auto | 1 | 2 | 3 | 4
+
+processing:
+  depth: standard           # deep | standard | quick
+  chaining: suggested       # manual | suggested | automatic
+  extraction:
+    selectivity: moderate   # strict | moderate | permissive
+    categories:
+      - name: core-claim
+        what_to_find: "技術的主張・発見の核心"
+        output_type: insight
+      - name: pattern
+        what_to_find: "複数ソースに繰り返すパターン・構造"
+        output_type: pattern
+      - name: anti-pattern
+        what_to_find: "壊れるもの、避けるべきもの"
+        output_type: anti-pattern
+      - name: tension
+        what_to_find: "矛盾・競合する主張"
+        output_type: tension
+      - name: open-question
+        what_to_find: "未解決の問い、調査余地"
+        output_type: question
+      - name: implementation-detail
+        what_to_find: "技術検証・実装に必要な具体的詳細"
+        output_type: insight
+  verification:
+    description_test: true
+    schema_check: true
+    link_check: true
+  reweave:
+    scope: related          # related | broad | full
+    frequency: after_create # after_create | periodic | manual
+
+provenance: full    # full | minimal | off
+
+personality:
+  enabled: false   # ニュートラル・ヘルプフルデフォルト
+
+research:
+  primary: web-search
+  fallback: web-search
+  last_resort: web-search
+  default_depth: moderate    # light | moderate | deep
