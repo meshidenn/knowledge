@@ -1,0 +1,12 @@
+{
+  "schema_version": 3,
+  "created": "2026-03-24T00:00:00Z",
+  "tasks": [],
+  "maintenance_conditions": {
+    "observations_threshold": 10,
+    "tensions_threshold": 5,
+    "moc_size_threshold": 40,
+    "inbox_age_days": 3,
+    "health_check_days": 7
+  }
+}
