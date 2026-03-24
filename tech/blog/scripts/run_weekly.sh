@@ -46,7 +46,7 @@ echo "[2/3] 週次まとめを生成中..."
 
 RAW_CONTENT=$(cat "$RAW_FILE")
 
-claude --print <<PROMPT
+claude --print <<PROMPT > "$WEEKLY_FILE"
 以下は今週（$WEEK_LABEL）いいね・ストックした技術記事の一覧（JSON）です。
 これをもとに週次まとめMarkdownを作成してください。
 
