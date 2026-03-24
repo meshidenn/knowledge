@@ -92,7 +92,7 @@ fi
 
 WEEKLY_CONTENT=$(cat "$WEEKLY_FILE")
 
-claude --print <<PROMPT
+claude --print <<PROMPT > "$SUMMARY_FILE"
 以下の情報をもとに全体まとめ（summary.md）を更新してください。
 
 ## 指示
