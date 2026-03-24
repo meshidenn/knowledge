@@ -77,7 +77,7 @@ claude --print <<PROMPT > "$WEEKLY_FILE"
 
 ## 記事データ
 ${RAW_CONTENT}
-PROMPT > "$WEEKLY_FILE"
+PROMPT
 
 echo "[OK] $WEEKLY_FILE を生成しました"
 
