@@ -119,7 +119,7 @@ ${EXISTING_SUMMARY:-（初回のため既存まとめなし）}
 
 ## 今週の週次まとめ
 ${WEEKLY_CONTENT}
-PROMPT > "$SUMMARY_FILE"
+PROMPT
 
 echo "[OK] $SUMMARY_FILE を更新しました"
 
