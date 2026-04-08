@@ -7,12 +7,28 @@ set -euo pipefail
 # ============================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck disable=SC1091
+. "$SCRIPT_DIR/cron_env.sh"
+
 REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_DIR"
+
+if [ -f .env ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source .env
+  set +a
+fi
 
 WEEK_LABEL=$(date +%Y-W%V)
 OUTPUT_FILE="papers/weekly/${WEEK_LABEL}.md"
 LOG_FILE="logs/weekly-${WEEK_LABEL}.log"
+
+copy_weekly_to_obsidian() {
+    mkdir -p "$OBSIDIAN_HF_PAPERS_WEEKLY"
+    cp -f "$REPO_DIR/$OUTPUT_FILE" "$OBSIDIAN_HF_PAPERS_WEEKLY/$(basename "$OUTPUT_FILE")"
+    echo "[OK] Copied to $OBSIDIAN_HF_PAPERS_WEEKLY/$(basename "$OUTPUT_FILE")"
+}
 
 mkdir -p papers/weekly logs
 
@@ -38,42 +54,46 @@ fi
 if [ -z "$DAILY_FILES" ]; then
     echo "[WARN] No daily intake files found"
     echo "# 📊 $WEEK_LABEL 週次トレンド分析\n\n今週の日次インテークが見つかりませんでした。" > "$OUTPUT_FILE"
+    copy_weekly_to_obsidian
     exit 0
 fi
 
 FILE_COUNT=$(echo "$DAILY_FILES" | wc -l | tr -d ' ')
 echo "[INFO] Found $FILE_COUNT daily files"
 
-# --- Claude Code で週次分析 ---
-echo "[1/3] Running weekly analysis..."
+# 日次全文を argv に載せない（ARG_MAX 回避）
+COMBINED=$(mktemp "${TMPDIR:-/tmp}/hf-weekly-combined.XXXXXX.md")
+trap 'rm -f "$COMBINED"' EXIT
+# shellcheck disable=SC2086
+cat $DAILY_FILES > "$COMBINED"
 
-claude -p "
-papers/daily/ ディレクトリにある .md ファイル（日次インテーク結果）を全て読んで、
-週次トレンド分析を実行してください。
-結果を $OUTPUT_FILE に保存してください。
-CLAUDE.md の「週次トレンド分析」セクションのフォーマットに従ってください。
-" --allowedTools "Bash(read_file:*)" "Bash(write_file:*)" "Bash(ls:*)" > /dev/null 2>&1
+# --- OpenAI Codex で週次分析 ---
+echo "[1/4] Running weekly analysis with OpenAI Codex..."
 
-# フォールバック
+if ! codex exec "
+${COMBINED} を読んで週次トレンド分析を実行してください（複数日分の日次インテークを結合した1ファイルです）。
+CLAUDE.md の「週次トレンド分析」セクションのフォーマットに厳密に従い、
+最終回答は完成した Markdown 本文のみを返してください。
+進捗説明、前置き、補足、コードフェンス、\`@papers/...\` のような参照表記は一切含めないでください。
+出力の先頭行は必ず \`# 📊 ${WEEK_LABEL} 週次トレンド分析\` から始めてください。
+" -s read-only -o "$OUTPUT_FILE" >/dev/null 2>&1; then
+    echo "[ERROR] Weekly analysis failed"
+    exit 1
+fi
+
 if [ ! -f "$OUTPUT_FILE" ] || [ ! -s "$OUTPUT_FILE" ]; then
-    echo "[WARN] Retrying with direct content..."
-    DAILY_CONTENT=$(cat $DAILY_FILES)
-    claude -p "
-以下は今週の日次インテーク結果です。週次トレンド分析を実行してください。
-CLAUDE.md のフォーマットに従ってMarkdownだけを出力してください。
-
-${DAILY_CONTENT}
-" --print > "$OUTPUT_FILE"
+    echo "[ERROR] Weekly analysis failed"
+    exit 1
 fi
 
 echo "[OK] Saved to $OUTPUT_FILE"
 
 # --- メール送信 ---
-echo "[2/3] Sending email..."
+echo "[2/4] Sending email..."
 uv run scripts/send_email.py "$OUTPUT_FILE"
 
 # --- Git コミット & プッシュ ---
-echo "[3/3] Committing..."
+echo "[3/4] Committing..."
 git add papers/ logs/
 if ! git diff --staged --quiet; then
     git commit -m "📊 $WEEK_LABEL weekly analysis"
@@ -82,5 +102,8 @@ if ! git diff --staged --quiet; then
 else
     echo "[SKIP] Nothing to commit"
 fi
+
+echo "[4/4] Copying to Obsidian..."
+copy_weekly_to_obsidian
 
 echo "=== Done: $(date +%H:%M:%S) ==="

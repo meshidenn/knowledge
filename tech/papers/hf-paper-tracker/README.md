@@ -7,13 +7,13 @@ Hugging Face Daily Papers を自動追跡し、テーマ別に分類・要約・
 ```
 cron (ローカルPC)
   ├── uv run fetch_papers.py        ← HF API からデータ取得（LLM なし・依存はスクリプト内 PEP 723）
-  ├── claude -p "..."               ← CLAUDE.md を参照して分析（サブスク認証）
+  ├── codex exec "..."              ← OpenAI Codex CLI で分析（日次: raw JSON → md／週次: 結合日次 → 週次 md）
   ├── uv run enrich_skip_links.py   ← スキップ論文を raw JSON でリンク付きに上書き
   ├── uv run send_email.py         ← Gmail SMTP で通知
   └── git commit/push               ← 結果を papers/ に蓄積
 ```
 
-- LLM呼び出しは全て Claude Code CLI 経由（サブスクリプション認証、API KEY 不要）
+- 日次・週次の自動分析は **OpenAI Codex CLI** の `codex exec`（`scripts/run_daily.sh` / `run_weekly.sh` 内）
 - 分析ロジックは `CLAUDE.md` に一元管理
 - ローカルで手動実行する時も自動実行も同じ設定
 
@@ -51,14 +51,14 @@ uv run scripts/send_email.py papers/daily/2026-03-22.md
 
 既存の日次 `.md` にだけスキップリンクを付け直す場合も上の `enrich_skip_links.py` 行を使う（第1引数: md、第2引数: 同日の raw JSON）。
 
-### 2. Claude Code にログイン済みであることを確認
+### 2. OpenAI Codex CLI が使えることを確認
 
 ```bash
-claude --version   # インストール確認
-claude /status     # ログイン状態確認
+codex --version    # インストール確認
+codex exec --help  # 利用可能か確認
 ```
 
-サブスク（Pro / Max）にログインしていれば OK。API KEY は不要。
+Codex CLI の認証は各環境の手順に従う（`run_daily.sh` / `run_weekly.sh` と同じ `codex` が cron でも使えること）。
 
 ### 3. Gmail アプリパスワードを設定
 
@@ -80,7 +80,7 @@ EOF
 crontab -e
 ```
 
-以下を追記（パスは実際の場所に置き換え）。`uv` が cron の `PATH` に入らない場合は `export PATH="$HOME/.local/bin:$PATH"` などを前置する。
+以下を追記（パスは実際の場所に置き換え）。`scripts/cron_env.sh` で `~/.local/bin` と mise shims を `PATH` に足すため、通常は crontab 側で `PATH` を足さなくてよい。
 
 ```cron
 # 日次インテーク（平日朝9:00）
@@ -135,7 +135,7 @@ claude "https://arxiv.org/abs/2403.xxxxx を深掘り分析して"
 claude "今週の論文に関連度フィルタをかけて"
 
 # 週次分析（手動）
-claude "今週の週次トレンド分析を実行して"
+./scripts/run_weekly.sh
 ```
 
 ## PC スリープ対策

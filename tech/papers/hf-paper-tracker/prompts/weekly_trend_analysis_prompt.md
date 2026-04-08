@@ -3,8 +3,8 @@
 ## 使い方
 
 1. cron が毎週日曜に `scripts/run_weekly.sh` を自動実行する
-2. 手動の場合は `claude "今週の週次トレンド分析して"` を実行
-3. `papers/daily/*.md` の今週分が自動で読み込まれる
+2. 手動の場合は `scripts/run_weekly.sh` を実行（内部で OpenAI Codex `codex exec`）
+3. `papers/daily/*.md` の対象分が結合され Codex に渡される
 
 ---
 
