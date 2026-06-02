@@ -15,17 +15,20 @@ if [ -f .env ]; then
   set +a
 fi
 
-DATE="$(date +%Y-%m-%d)"
+DATE="${DATE:-$(date +%Y-%m-%d)}"
 OUTPUT_DIR="${OUTPUT_DIR:-$REPO_DIR/briefs}"
 RAW_DIR="${RAW_DIR:-$REPO_DIR/raw}"
+PAPER_RAW_DIR="${PAPER_RAW_DIR:-$RAW_DIR/papers}"
 CHAT_DIR="${CHAT_DIR:-$REPO_DIR/chat}"
 STATE_DIR="${STATE_DIR:-$REPO_DIR/state}"
 LOG_DIR="${LOG_DIR:-$REPO_DIR/logs}"
 STATE_FILE="$STATE_DIR/seen.json"
 RAW_FILE="$RAW_DIR/$DATE.json"
+MANIFEST_FILE="$RAW_DIR/$DATE.manifest.json"
 OUTPUT_FILE="$OUTPUT_DIR/$DATE.md"
 CHAT_FILE="$CHAT_DIR/$DATE.md"
 LOG_FILE="$LOG_DIR/$DATE.log"
+ACTIVITY_LOG="$LOG_DIR/activity.md"
 
 copy_to_obsidian() {
   if [ "${EXPORT_TO_OBSIDIAN:-false}" != "true" ]; then
@@ -36,8 +39,20 @@ copy_to_obsidian() {
     return 0
   fi
   mkdir -p "$OBSIDIAN_EXPORT_DIR/chat"
-  cp -f "$OUTPUT_FILE" "$OBSIDIAN_EXPORT_DIR/$(basename "$OUTPUT_FILE")"
-  cp -f "$CHAT_FILE" "$OBSIDIAN_EXPORT_DIR/chat/$(basename "$CHAT_FILE")"
+  if [ -f "$OUTPUT_FILE" ]; then
+    cp -f "$OUTPUT_FILE" "$OBSIDIAN_EXPORT_DIR/$(basename "$OUTPUT_FILE")"
+  fi
+  if [ -d "$OUTPUT_DIR/$DATE" ]; then
+    rm -rf "$OBSIDIAN_EXPORT_DIR/$DATE"
+    cp -R "$OUTPUT_DIR/$DATE" "$OBSIDIAN_EXPORT_DIR/"
+  fi
+  if [ -f "$CHAT_FILE" ]; then
+    cp -f "$CHAT_FILE" "$OBSIDIAN_EXPORT_DIR/chat/$(basename "$CHAT_FILE")"
+  fi
+  if [ -d "$CHAT_DIR/$DATE" ]; then
+    rm -rf "$OBSIDIAN_EXPORT_DIR/chat/$DATE"
+    cp -R "$CHAT_DIR/$DATE" "$OBSIDIAN_EXPORT_DIR/chat/"
+  fi
   if [ -f "$OUTPUT_DIR/README.md" ]; then
     cp -f "$OUTPUT_DIR/README.md" "$OBSIDIAN_EXPORT_DIR/README.md"
   fi
@@ -45,6 +60,19 @@ copy_to_obsidian() {
     cp -f "$OUTPUT_DIR/latest.md" "$OBSIDIAN_EXPORT_DIR/latest.md"
   fi
   echo "[OK] Copied Markdown to $OBSIDIAN_EXPORT_DIR"
+}
+
+notify_mobile() {
+  local title="$1"
+  local message="$2"
+  local url="${3:-}"
+  local notify_env_file="${NOTIFY_ENV_FILE:-$REPO_DIR/../hf-paper-tracker/.env}"
+
+  uv run scripts/notify_mobile.py \
+    --title "$title" \
+    --message "$message" \
+    --url "$url" \
+    --env-file "$notify_env_file" || true
 }
 
 stage_if_inside_repo() {
@@ -57,7 +85,7 @@ stage_if_inside_repo() {
   esac
 }
 
-mkdir -p "$OUTPUT_DIR" "$RAW_DIR" "$CHAT_DIR" "$STATE_DIR" "$LOG_DIR"
+mkdir -p "$OUTPUT_DIR" "$RAW_DIR" "$PAPER_RAW_DIR" "$CHAT_DIR" "$STATE_DIR" "$LOG_DIR"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 echo "=== Paperpile Daily Brief: $DATE $(date +%H:%M:%S) ==="
@@ -90,57 +118,70 @@ uv run scripts/fetch_new_papers.py \
 
 PAPER_COUNT="$(uv run python -c "import json; print(json.load(open('$RAW_FILE'))['count'])")"
 if [ "$PAPER_COUNT" -eq 0 ]; then
-  echo "# Paperpile Daily Brief $DATE" > "$OUTPUT_FILE"
   {
-    echo
-    echo "新しく追加された論文はありません。"
-  } >> "$OUTPUT_FILE"
-  uv run scripts/create_chat_prompt.py --raw "$RAW_FILE" --brief "$OUTPUT_FILE" --output "$CHAT_FILE"
+    echo "- $DATE $(date +%H:%M:%S): new_papers=0 source=$PAPERPILE_EXPORT_PATH"
+  } >> "$ACTIVITY_LOG"
   uv run scripts/update_index.py --briefs-dir "$OUTPUT_DIR" --chat-dir "$CHAT_DIR"
   copy_to_obsidian
+  notify_mobile "Paperpile Brief $DATE" "新しく追加された論文はありません。記録は logs/activity.md に追記しました。"
   echo "[OK] No new papers"
   exit 0
 fi
 
-echo "[2/6] Generating Ochiai-format Markdown with Codex..."
+echo "[2/6] Preparing per-paper brief targets..."
+uv run scripts/prepare_paper_briefs.py \
+  --raw "$RAW_FILE" \
+  --briefs-dir "$OUTPUT_DIR" \
+  --chat-dir "$CHAT_DIR" \
+  --paper-raw-dir "$PAPER_RAW_DIR" \
+  --manifest "$MANIFEST_FILE"
+
+echo "[3/7] Generating per-paper Ochiai-format Markdown with Codex..."
 echo "[INFO] codex: $(command -v codex || echo 'not found')"
-if ! codex exec "
+mapfile -t PAPER_ROWS < <(uv run python -c "import json; m=json.load(open('$MANIFEST_FILE')); [print('\t'.join([p['raw'], p['brief'], p['chat'], p['title'].replace('\t', ' ')])) for p in m['papers']]")
+for PAPER_ROW in "${PAPER_ROWS[@]}"; do
+  IFS=$'\t' read -r PAPER_RAW PAPER_BRIEF PAPER_CHAT PAPER_TITLE <<< "$PAPER_ROW"
+  echo "[INFO] Briefing: $PAPER_TITLE"
+  if ! codex exec "
 $(cat prompts/ochiai_brief_prompt.md)
 
 日付は ${DATE} です。
-入力JSONは ${RAW_FILE} です。このファイルを読み、指定フォーマットでMarkdown本文だけを出力してください。
-" -s read-only -o "$OUTPUT_FILE"; then
-  echo "[ERROR] Codex analysis failed"
-  exit 1
-fi
+入力JSONは ${PAPER_RAW} です。このファイルには1本の論文だけが入っています。
+指定フォーマットで、その論文単体のMarkdown本文だけを出力してください。
+" -s read-only -o "$PAPER_BRIEF" < /dev/null; then
+    echo "[ERROR] Codex analysis failed: $PAPER_TITLE"
+    exit 1
+  fi
 
-if [ ! -s "$OUTPUT_FILE" ]; then
-  echo "[ERROR] Output Markdown is empty"
-  exit 1
-fi
+  if [ ! -s "$PAPER_BRIEF" ]; then
+    echo "[ERROR] Output Markdown is empty: $PAPER_BRIEF"
+    exit 1
+  fi
 
-echo "[3/6] Creating chat prompt..."
-uv run scripts/create_chat_prompt.py --raw "$RAW_FILE" --brief "$OUTPUT_FILE" --output "$CHAT_FILE"
+  uv run scripts/create_chat_prompt.py --raw "$PAPER_RAW" --brief "$PAPER_BRIEF" --output "$PAPER_CHAT"
 
-{
-  echo
-  echo "---"
-  echo
-  echo "## 追加で聞く"
-  echo
-  echo "- このままチャットで聞くためのプロンプト: [chat/$DATE.md](../chat/$DATE.md)"
-  echo "- ローカルで続けて聞く例: \`codex exec \"chat/$DATE.md を読んで、気になる点を深掘りして\"\`"
-} >> "$OUTPUT_FILE"
+  {
+    echo
+    echo "---"
+    echo
+    echo "## 追加で聞く"
+    echo
+    echo "- Chat prompt: [$(basename "$PAPER_CHAT")](../../chat/$DATE/$(basename "$PAPER_CHAT"))"
+    echo "- モバイルではObsidian Mobileで上のchatファイルを開き、本文をChatGPT mobileへ貼る。"
+  } >> "$PAPER_BRIEF"
+done
 
+echo "[4/7] Writing daily index..."
+uv run scripts/write_daily_index.py --manifest "$MANIFEST_FILE" --output "$OUTPUT_FILE"
 uv run scripts/update_index.py --briefs-dir "$OUTPUT_DIR" --chat-dir "$CHAT_DIR"
 
-echo "[4/6] Marking papers as processed..."
+echo "[5/7] Marking papers as processed..."
 uv run scripts/mark_processed.py --raw "$RAW_FILE" --state "$STATE_FILE"
 
-echo "[5/6] Exporting Markdown..."
+echo "[6/7] Exporting Markdown..."
 copy_to_obsidian
 
-echo "[6/6] Commit and push..."
+echo "[7/7] Commit, push, and notify..."
 if [ "${PUSH_TO_GIT:-true}" = "true" ]; then
   stage_if_inside_repo "$OUTPUT_DIR"
   stage_if_inside_repo "$CHAT_DIR"
@@ -154,5 +195,7 @@ if [ "${PUSH_TO_GIT:-true}" = "true" ]; then
 else
   echo "[SKIP] PUSH_TO_GIT=false"
 fi
+
+notify_mobile "Paperpile Brief $DATE" "新規論文 ${PAPER_COUNT} 本の論文別briefを生成しました。Obsidianの paperpile-briefs/$DATE.md から読めます。"
 
 echo "=== Done: $(date +%H:%M:%S) ==="
