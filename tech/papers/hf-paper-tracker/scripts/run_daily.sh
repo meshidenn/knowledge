@@ -124,18 +124,25 @@ uv run scripts/enrich_skip_links.py "$OUTPUT_FILE" "$RAW_FILE"
 echo "[4/6] Sending email..."
 uv run scripts/send_email.py "$OUTPUT_FILE"
 
-# --- Step 5: Git コミット & プッシュ ---
-echo "[5/6] Committing..."
+# --- Step 5: Obsidian export ---
+echo "[5/6] Copying to Obsidian..."
+copy_daily_to_obsidian
+
+# --- Step 6: Git コミット & プッシュ ---
+echo "[6/6] Committing..."
 stage_dir_if_within_repo "$WORK_DIR"
 if ! git diff --staged --quiet; then
-    git commit -m "📄 ${DATE} daily intake"
-    git push
-    echo "[OK] Pushed to remote"
+    if git commit -m "📄 ${DATE} daily intake"; then
+        if git push; then
+            echo "[OK] Pushed to remote"
+        else
+            echo "[WARN] git push failed; Obsidian export already completed"
+        fi
+    else
+        echo "[WARN] git commit failed; Obsidian export already completed"
+    fi
 else
     echo "[SKIP] Nothing to commit"
 fi
-
-echo "[6/6] Copying to Obsidian..."
-copy_daily_to_obsidian
 
 echo "=== Done: $(date +%H:%M:%S) ==="
