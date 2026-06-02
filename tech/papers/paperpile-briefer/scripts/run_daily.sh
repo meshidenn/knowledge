@@ -128,7 +128,14 @@ if [ "$PAPER_COUNT" -eq 0 ]; then
   exit 0
 fi
 
-echo "[2/6] Preparing per-paper brief targets..."
+echo "[2/8] Extracting PDF text..."
+PDF_ENRICH_ARGS=(--raw "$RAW_FILE")
+if [ -n "${PAPERPILE_PDF_BASE_DIR:-}" ]; then
+  PDF_ENRICH_ARGS+=(--paperpile-base-dir "$PAPERPILE_PDF_BASE_DIR")
+fi
+uv run scripts/enrich_pdf_text.py "${PDF_ENRICH_ARGS[@]}"
+
+echo "[3/8] Preparing per-paper brief targets..."
 uv run scripts/prepare_paper_briefs.py \
   --raw "$RAW_FILE" \
   --briefs-dir "$OUTPUT_DIR" \
@@ -136,7 +143,7 @@ uv run scripts/prepare_paper_briefs.py \
   --paper-raw-dir "$PAPER_RAW_DIR" \
   --manifest "$MANIFEST_FILE"
 
-echo "[3/7] Generating per-paper Ochiai-format Markdown with Codex..."
+echo "[4/8] Generating per-paper Ochiai-format Markdown with Codex..."
 echo "[INFO] codex: $(command -v codex || echo 'not found')"
 mapfile -t PAPER_ROWS < <(uv run python -c "import json; m=json.load(open('$MANIFEST_FILE')); [print('\t'.join([p['raw'], p['brief'], p['chat'], p['title'].replace('\t', ' ')])) for p in m['papers']]")
 for PAPER_ROW in "${PAPER_ROWS[@]}"; do
@@ -171,17 +178,17 @@ $(cat prompts/ochiai_brief_prompt.md)
   } >> "$PAPER_BRIEF"
 done
 
-echo "[4/7] Writing daily index..."
+echo "[5/8] Writing daily index..."
 uv run scripts/write_daily_index.py --manifest "$MANIFEST_FILE" --output "$OUTPUT_FILE"
 uv run scripts/update_index.py --briefs-dir "$OUTPUT_DIR" --chat-dir "$CHAT_DIR"
 
-echo "[5/7] Marking papers as processed..."
+echo "[6/8] Marking papers as processed..."
 uv run scripts/mark_processed.py --raw "$RAW_FILE" --state "$STATE_FILE"
 
-echo "[6/7] Exporting Markdown..."
+echo "[7/8] Exporting Markdown..."
 copy_to_obsidian
 
-echo "[7/7] Commit, push, and notify..."
+echo "[8/8] Commit, push, and notify..."
 if [ "${PUSH_TO_GIT:-true}" = "true" ]; then
   stage_if_inside_repo "$OUTPUT_DIR"
   stage_if_inside_repo "$CHAT_DIR"

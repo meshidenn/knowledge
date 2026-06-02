@@ -28,6 +28,26 @@ REFERENCE_LIST_KEYS = (
     "library",
 )
 
+PDF_PATH_KEYS = (
+    "pdf",
+    "pdfPath",
+    "pdf_path",
+    "file",
+    "filePath",
+    "filepath",
+    "path",
+    "localPath",
+    "local_path",
+)
+
+ATTACHMENT_KEYS = (
+    "attachments",
+    "files",
+    "fileAttachments",
+    "documents",
+    "pdfs",
+)
+
 
 def first_string(*values: Any) -> str:
     for value in values:
@@ -68,6 +88,42 @@ def normalize_authors(value: Any) -> list[str]:
                     authors.append(name)
         return authors
     return []
+
+
+def looks_like_pdf_path(value: str) -> bool:
+    lowered = value.lower()
+    return lowered.endswith(".pdf") or ".pdf?" in lowered
+
+
+def collect_pdf_paths(value: Any) -> list[str]:
+    paths: list[str] = []
+
+    def add(candidate: Any) -> None:
+        if isinstance(candidate, str):
+            stripped = candidate.strip()
+            if stripped and looks_like_pdf_path(stripped):
+                paths.append(stripped)
+
+    def walk(current: Any) -> None:
+        if isinstance(current, dict):
+            for key, child in current.items():
+                if key in PDF_PATH_KEYS:
+                    add(child)
+                elif key in ATTACHMENT_KEYS:
+                    walk(child)
+                elif isinstance(child, dict) and any(name in child for name in PDF_PATH_KEYS + ATTACHMENT_KEYS):
+                    walk(child)
+                elif isinstance(child, list) and key in ATTACHMENT_KEYS:
+                    walk(child)
+        elif isinstance(current, list):
+            for item in current:
+                if isinstance(item, str):
+                    add(item)
+                else:
+                    walk(item)
+
+    walk(value)
+    return list(dict.fromkeys(paths))
 
 
 def flatten_reference_lists(data: Any) -> list[dict[str, Any]]:
@@ -137,6 +193,7 @@ def normalize_reference(ref: dict[str, Any]) -> dict[str, Any]:
         "doi": doi,
         "arxiv_id": arxiv_id,
         "url": url,
+        "pdf_paths": collect_pdf_paths(merged),
         "added": first_string(merged.get("added"), merged.get("created"), merged.get("dateAdded"), merged.get("createdAt")),
         "source": "paperpile-export",
     }

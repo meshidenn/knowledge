@@ -71,6 +71,21 @@ class FetchNewPapersTest(unittest.TestCase):
             self.assertEqual(refs[0]["title"], "Interesting Paper")
             self.assertEqual(refs[0]["url"], "https://doi.org/10.1234/example")
 
+    def test_collects_pdf_paths_from_export_attachments(self):
+        ref = fetch_new_papers.normalize_reference(
+            {
+                "id": "a",
+                "title": "PDF Paper",
+                "attachments": [
+                    {"path": "/papers/a.pdf"},
+                    {"filePath": "/papers/supplement.txt"},
+                    {"localPath": "~/Paperpile/b.pdf"},
+                ],
+            }
+        )
+
+        self.assertEqual(ref["pdf_paths"], ["/papers/a.pdf", "~/Paperpile/b.pdf"])
+
     def test_updates_readable_index_and_latest(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
