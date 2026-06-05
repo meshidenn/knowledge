@@ -25,20 +25,21 @@
 
 ## 落合陽一フォーマット
 
-- **ひとことでいうと**: LLMのOn-Policy Distillationで、教師と生徒の分布がずれたときに不安定になる問題を、信頼できる領域だけで蒸留するTrust Region型の手法で改善する論文。
-- **先行研究と比べてどこがすごい？**: 通常のOPDやEOPD、REOPOLDでは、学生モデルが生成したトークンに対する教師の監督が分布ミスマッチ下で信頼できず、勾配推定が壊れやすい。この論文は、教師の監督が信頼できる領域と外れ値領域を分け、信頼領域ではon-policy学習、外れ値領域ではクリッピング・マスキング・forward KL推定などを使う設計にしている点が新規性。
-- **技術や手法の肝はどこ？**: コアはTrOPD、すなわちTrust Region On-Policy Distillation。学生が生成したトークンに対して、教師のtoken-level supervisionが信頼できる範囲だけでOPDを行い、分布ミスマッチ下でK1 reverse-KL estimatorが難しくなる問題を緩和する。さらに、教師prefixから学生に生成を継続させるoff-policy guidanceを使い、forward KLで信頼可能な領域へ探索を寄せる。
-- **どうやって有効だと検証した？**: abstractベースでは、数学推論、コード生成、一般ドメインのベンチマークで、OPD、EOPD、REOPOLDなどのSoTA OPDベースラインと比較し、一貫して上回ったとされる。PDF本文がないため、具体的なモデルサイズ、データセット名、数値差、アブレーションの詳細はメタデータからは不明。
-- **議論はある？**: PDF本文がないため詳細な限界は不明。想定される論点は、信頼領域の判定基準がどの程度頑健か、外れ値処理のハイパーパラメータ依存性、forward KLによるoff-policy guidanceが探索多様性を狭めないか、数学・コード以外の長期タスクやエージェント学習で同じように効くか。
-- **次に読む/試すなら**: TrOPDのtrust region判定式とK1 reverse-KL estimatorの扱いを本文で確認する。OPD/EOPD/REOPOLDとの差分を実装単位で整理する。小さなLLM蒸留実験で、分布ミスマッチが大きい設定を作って再現する。
-- **キーワード**: `on-policy distillation`, `trust region`, `LLM post-training`, `reverse KL`, `forward KL`, `policy distillation`
+- **ひとことでいうと**: LLMのオンポリシー蒸留で、教師と学生モデルの分布がずれたときに不安定化する問題を、信頼できる領域だけで蒸留する Trust Region On-Policy Distillation, TrOPD で改善する論文。
+- **先行研究と比べてどこがすごい？**: 既存の OPD, EOPD, REOPOLD などは、学生が生成したトークンに対して教師が常に信頼できる監督を与える前提が強い。TrOPD は教師の監督が信頼できる領域と外れ領域を分け、分布ミスマッチ下の逆KL推定の不安定性を抑える設計になっている点が差分。
+- **技術や手法の肝はどこ？**: コアは、オンポリシー蒸留を「教師が信頼できるトークン領域」に限定する trust-region 的な学習。外れ領域では gradient clipping、masking、forward-KL 推定を使って悪影響を減らし、さらに教師 prefix から学生に生成を続けさせる off-policy guidance によって、学生の探索を信頼可能な領域へ寄せる。
+- **どうやって有効だと検証した？**: abstract ベースでは、数学推論、コード生成、一般ドメインのベンチマークで OPD, EOPD, REOPOLD などのSoTA OPDベースラインと比較し、TrOPD が一貫して上回ったとされている。具体的なモデルサイズ、データセット名、数値差、アブレーションの詳細はメタデータからは不明。
+- **議論はある？**: PDF本文がないため詳細な限界は不明。想定される論点は、信頼領域の判定基準がどれだけ頑健か、外れ領域処理の選択がタスクやモデルに依存しないか、教師 prefix による off-policy guidance が探索多様性を狭めないか、という点。
+- **次に読む/試すなら**: TrOPD の trust-region 判定式と閾値設計を確認する。OPD/EOPD/REOPOLD との差分を実装レベルで比較する。小さな数学推論またはコード生成タスクで masking / clipping / forward-KL のアブレーションを再現する。
+- **キーワード**: `on-policy distillation`, `LLM post-training`, `trust region`, `policy distillation`, `reverse KL`, `forward KL`, `distribution mismatch`
 
 ## 気になったこと
 
-- trust regionを何で定義しているのか。教師と学生の確率比、KL、logprob差、あるいは別の信頼度指標か。
-- 外れ値領域でのgradient clipping、masking、forward-KL estimationの使い分けは固定ルールか、実験的に選ぶものか。
-- 「一貫して上回る」が、平均性能なのか、安定性・失敗率の改善なのか、compute効率も含むのかを確認したい。
-- REOPOLDとの違いを、目的関数・サンプリング・credit assignmentの観点で比較したい。
+- 「教師が信頼できる領域」を何で測るのか。確率比、KL、教師尤度、学生尤度、あるいは別の信用スコアなのか。
+- K1 reverse-KL estimator の最適化失敗が、どの条件で顕著に起きるのか。
+- off-policy guidance がオンポリシー探索の改善なのか、実質的には教師軌道への回帰なのか。
+- 数学推論・コード生成・一般ベンチマークで、どのタスクに一番効いているのか。
+- REOPOLD との違いを、損失関数とサンプリング手順の観点で確認したい。
 
 ## そのまま聞ける質問
 

@@ -14,32 +14,31 @@
 
 ## Brief
 
-# Paperpile Brief 2026-06-05 - OCC-RAG: Optimal Cognitive Core for faithful question answering
+# Paperpile Brief 2026-06-05 - {OCC}-{RAG}: Optimal Cognitive Core for faithful question answering
 
 ## 基本情報
 
-- **タイトル**: OCC-RAG: Optimal Cognitive Core for faithful question answering
+- **タイトル**: {OCC}-{RAG}: Optimal Cognitive Core for faithful question answering
 - **著者**: Maksim Savkin, Mikhail Goncharov, Alexander Gambashidze, Alla Chepurova, Dmitrii Tarasov, Nikita Andriianov, Daria Pugacheva, Vasily Konovalov, Andrey Galichin, Ivan Oseledets
 - **年 / venue**: 2026 / arXiv [cs.CL]
 - **リンク**: メタデータからは不明
 
 ## 落合陽一フォーマット
 
-- **ひとことでいうと**: 大規模な汎用LLMではなく、与えられた文脈に忠実に多段推論・回答・拒否を行う小型言語モデルOCC-RAGを提案した論文。
-- **先行研究と比べてどこがすごい？**: パラメトリック知識の多さよりも、提供コンテキストに基づく忠実なQA能力に特化している点が差分。0.6B/1.7B規模のSLMで、2〜6倍大きい汎用モデルに匹敵または上回ると主張している。ただしPDF本文がなく、比較条件や統計的な詳細はメタデータからは不明。
-- **技術や手法の肝はどこ？**: OCCという「タスク特化小型モデル」の設計思想に基づき、OCC-RAGでは複数文脈・複数ホップQAデータを大規模合成する学習パイプラインを作っている。300万件超の例で、多段推論、文脈忠実性、答えられない場合の棄権を狙ってmid-trainingしている点がコア。
-- **どうやって有効だと検証した？**: abstract上ではHotpotQA、MuSiQue、TAT-QAで多段推論、ConFiQAでfaithfulness、MuSiQue-Unでrefusalを評価したとされる。比較対象は「2〜6倍大きい汎用モデル」とあるが、具体的なモデル名・スコア・評価プロンプトはメタデータからは不明。
-- **議論はある？**: PDF本文がないため、限界や失敗例はメタデータからは不明。気になる点は、合成データの分布偏り、引用が本当に根拠として機能しているか、構造化reasoning traceがfaithfulnessを保証するのか、ベンチマーク外のRAG用途にどこまで一般化するか。
-- **次に読む/試すなら**: OCC-RAG-0.6B/1.7Bのモデル公開先を探す。HotpotQA/MuSiQueで手元RAGタスクに近い最小評価を組む。合成QA生成パイプラインの詳細とデータライセンスを確認する。
-- **キーワード**: `RAG`, `faithful QA`, `small language model`, `multi-hop reasoning`, `abstention`, `context grounding`
+- **ひとことでいうと**: 大規模な汎用LLMではなく、与えられた文脈に忠実に多段推論して回答する小型言語モデルOCC-RAGを作った論文。
+- **先行研究と比べてどこがすごい？**: パラメトリック知識の多さよりも、提供文脈に基づく推論・引用・棄却判断に特化した設計を取っている点。0.6B / 1.7Bの小型モデルで、2〜6倍サイズの汎用モデルに対して、HotpotQA、MuSiQue、TAT-QA、ConFiQA、MuSiQue-Unで同等以上と主張している。
+- **技術や手法の肝はどこ？**: multi-context / multi-hop QAを大量合成する学習パイプラインを作り、300万件超のデータで中間学習した点。回答時には構造化された reasoning trace と、文脈中のリテラルな引用に基づく source citation を出す設計らしい。
+- **どうやって有効だと検証した？**: abstract上では、multi-hop reasoning系のHotpotQA、MuSiQue、TAT-QA、faithfulness評価のConFiQA、拒否性能のMuSiQue-Unで比較したとされる。ただしPDF本文がないため、比較モデル、正確なスコア、評価プロンプト、統計的有意性はメタデータからは不明。
+- **議論はある？**: PDF未取得のため詳細な限界は不明。気になる点は、合成データの分布に過適合していないか、引用が「見かけ上の根拠」になっていないか、RAG文脈にノイズや矛盾がある場合の挙動、ドメイン外QAでのfaithfulness維持。
+- **次に読む/試すなら**: OCC-RAG-0.6B / 1.7Bのモデル公開先を探す。ConFiQAやMuSiQue-Unでの拒否条件を確認する。自分のRAGデータで「引用必須・根拠なしなら棄却」の最小評価セットを作る。
+- **キーワード**: `RAG`, `faithful QA`, `small language model`, `multi-hop reasoning`, `abstention`, `source citation`
 
 ## 気になったこと
 
-- 引用つきreasoning traceが、単なる生成フォーマットではなく実際の根拠選択能力を改善しているのか。
-- 「literal quotes from the context」によるcitationは、長文・表・数式・ノイズ混じりPDFでも安定するのか。
-- 300万件超の合成データの生成元、フィルタリング、品質評価、汚染対策。
-- 小型モデルが大きい汎用モデルを上回る条件は、コンテキストが十分与えられる場合に限定されるのか。
-- 実運用では、検索器の失敗時にOCC-RAGがどれくらい適切に拒否できるのか。
+- PDF本文がないため、OCCの「Optimal Cognitive Core」が具体的にモデル構造なのか、学習方針なのか、データ設計思想なのかを確認したい。
+- reasoning traceが教師ありで学習されたものか、推論時フォーマット制御だけなのかが重要。
+- 「literal quotes from the context」による citation が、回答生成の検証にも使われているのか、単なる出力形式なのかを確認したい。
+- 合成QAデータ300万件超の生成元、品質管理、リーク対策、ベンチマーク汚染対策を読むべき。
 
 ## そのまま聞ける質問
 

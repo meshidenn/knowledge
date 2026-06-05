@@ -14,31 +14,32 @@
 
 ## Brief
 
-# Paperpile Brief 2026-06-05 - Nemotron 3 Ultra / Nemotron 3 Nano
+# Paperpile Brief 2026-06-05 - Nemotron 3 Ultra: Open, EfficientMixture-of-Experts Hybrid Mamba-Transformer Model for Agentic Reasoning / Nemotron 3 Nano
 
 ## 基本情報
 
-- **タイトル**: Nemotron 3 Ultra: Open, Efficient Mixture-of-Experts Hybrid Mamba-Transformer Model for Agentic Reasoning / Nemotron 3 Nano: Open, efficient Mixture-of-Experts hybrid Mamba-Transformer model for agentic reasoning
-- **著者**: Aaron Blakeman, Aaron Grattafiori, Aarti Basant, Abhibha Gupta, Abhinav Khattar, Adi Renduchintala ほか多数
+- **タイトル**: Nemotron 3 Ultra: Open, EfficientMixture-of-Experts Hybrid Mamba-Transformer Model for Agentic Reasoning / Nemotron 3 Nano: Open, efficient Mixture-of-Experts hybrid Mamba-Transformer model for agentic reasoning
+- **著者**: Aaron Blakeman, Aaron Grattafiori, Aarti Basant, Abhibha Gupta, Abhinav Khattar ほか NVIDIA 関係者多数
 - **年 / venue**: 2025 / arXiv [cs.CL]
-- **リンク**: DOI・arXiv ID・URLはメタデータからは不明
+- **リンク**: メタデータ上は DOI・arXiv ID・URL なし
 
 ## 落合陽一フォーマット
 
-- **ひとことでいうと**: NVIDIA系の大規模チームによる、Mixture-of-ExpertsとMamba-Transformerを組み合わせたオープンな推論・エージェント向けLLM「Nemotron 3 Nano 30B-A3B」を提示する論文。PDF本文は取得できていないため、以下はabstractベース。
-- **先行研究と比べてどこがすごい？**: Nemotron 2 Nanoより精度を上げつつ、forward passあたりの活性化パラメータを半分未満にしたと主張している。さらにGPT-OSS-20BやQwen3-30B-A3B-Thinking-2507のような同規模オープンモデルに対して、最大3.3倍の推論スループットと、主要ベンチマークでの高精度を主張している。
-- **技術や手法の肝はどこ？**: 30B規模だが各推論で約3B相当を活性化するMoE設計と、Mamba系の系列処理能力とTransformerを組み合わせたハイブリッド構成が中核。25兆text tokensで事前学習し、その後SFTと大規模RLを多様な環境で行う、という訓練パイプラインも重要。
-- **どうやって有効だと検証した？**: abstract上では、Nemotron 2 Nano、GPT-OSS-20B、Qwen3-30B-A3B-Thinking-2507との比較、人気ベンチマーク、推論スループット、agentic・reasoning・chat能力、最大1M tokensのコンテキスト対応を評価したとされる。ただしPDF本文がないため、具体的なベンチマーク名、表の数値、評価条件、ハードウェア条件はメタデータからは不明。
-- **議論はある？**: タイトルのメタデータが「Nemotron 3 Ultra」と「Nemotron 3 Nano」を連結したように見え、対象モデル名に不整合がある。性能主張はabstractでは強いが、比較条件、推論最適化、MoEルーティング、RL環境、1M context時の実効性能は本文なしでは検証できない。
-- **次に読む/試すなら**: Hugging Face上のBase/Post-trainedチェックポイントを確認する。技術報告本文でベンチマーク表と推論条件を読む。ローカルまたはクラウドGPUで長文推論・ツール利用・reasoning系タスクの最小評価を回す。
-- **キーワード**: `Mixture-of-Experts`, `Mamba-Transformer`, `Nemotron`, `agentic reasoning`, `long context`, `open language model`
+- **ひとことでいうと**: Nemotron 3 Nano 30B-A3B という、MoE と Mamba-Transformer を組み合わせたエージェント推論向けのオープン言語モデルを提示した論文。
+- **先行研究と比べてどこがすごい？**: メタデータ上では、Nemotron 2 Nano より高精度で、1回の forward pass で有効化するパラメータ数を半分未満に抑えた点が主張されている。GPT-OSS-20B や Qwen3-30B-A3B-Thinking-2507 のような同規模オープンモデルに対して、最大 3.3 倍の推論スループットとベンチマーク精度の優位性を主張している。
+- **技術や手法の肝はどこ？**: Mixture-of-Experts により全パラメータを毎回使わず、30B 規模ながら A3B、つまり有効化パラメータを小さくする設計が中核。さらに Mamba と Transformer のハイブリッド構成で、長文コンテキストや効率的推論を狙っている。事前学習は 25T text tokens、Nemotron 2 から 3T 以上の新規ユニークトークンを追加し、その後 SFT と大規模 RL を行ったとされる。
+- **どうやって有効だと検証した？**: PDF本文がなく、abstractベースの情報に限られる。人気ベンチマーク上での精度比較、同規模オープンモデルとの推論スループット比較、エージェント・推論・チャット能力の評価が行われたとされるが、具体的なベンチマーク名、設定、統計的検証、アブレーションの詳細はメタデータからは不明。
+- **議論はある？**: 1M tokens の長文コンテキスト対応、MoE ルーティング、Mamba-Transformer ハイブリッドの実運用上の安定性やメモリ効率は気になる。最大 3.3 倍というスループット主張も、ハードウェア、バッチサイズ、量子化、推論エンジン、コンテキスト長に強く依存する可能性がある。データ構成、RL環境、評価プロンプト、失敗例は本文なしでは確認できない。
+- **次に読む/試すなら**: Hugging Face 上の Base と post-trained checkpoint を確認する。推論スループットを自分の GPU / 推論基盤で GPT-OSS-20B や Qwen3 系と比較する。長文コンテキストとエージェントタスクで、精度低下・ルーティング挙動・コストを測る。
+- **キーワード**: `Nemotron 3 Nano`, `Mixture-of-Experts`, `Mamba-Transformer`, `agentic reasoning`, `long context`, `open LLM`
 
 ## 気になったこと
 
-- タイトルメタデータの「Ultra」と「Nano」の混在が、Paperpile取り込み時のタイトル結合ミスなのか、論文本体の命名なのか確認したい。
-- 「最大3.3倍」の推論スループットが、どのGPU、batch size、sequence length、precision、serving stackで測られたものか確認したい。
-- 1M tokens context対応が、単に入力可能という意味か、長距離検索・推論ベンチマークで有効性を示しているのか見たい。
-- MoE + Mamba-Transformerの組み合わせが、長文効率・推論能力・エージェント実行のどこに効いているのか、ablationを探したい。
+- タイトルのメタデータが “Ultra” と “Nano” を混在させており、実際の論文タイトルや対象モデル名を確認したい。
+- “30B-A3B” の具体的な expert 構成、ルーティング方式、active parameter count の定義を確認したい。
+- 1M tokens context の評価が、needle-in-a-haystack 的な検索能力なのか、実タスク上の長文推論なのかを確認したい。
+- RL の「diverse environments」が何を指すのか、エージェント性能にどの程度寄与しているのかを見たい。
+- オープンモデルとして、学習データ、評価データ汚染、ライセンス、商用利用条件を確認したい。
 
 ## そのまま聞ける質問
 

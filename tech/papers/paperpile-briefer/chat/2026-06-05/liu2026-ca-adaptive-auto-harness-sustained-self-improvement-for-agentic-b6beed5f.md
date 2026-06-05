@@ -21,25 +21,25 @@
 - **タイトル**: Adaptive Auto-harness: Sustained self-improvement for agentic system deployment on open-ended task streams
 - **著者**: Zewen Liu, Zhan Shi, Yisi Sang, Bing He, Minhua Lin, Tianxin Wei, Dakuo Wang, Benoit Dumoulin, Wei Jin, Hanqing Lu
 - **年 / venue**: 2026 / arXiv [cs.LG]
-- **リンク**: Code: https://github.com/A-EVO-Lab/AdaptiveHarness
+- **リンク**: https://github.com/A-EVO-Lab/AdaptiveHarness
 
 ## 落合陽一フォーマット
 
-- **ひとことでいうと**: LLMエージェントのプロンプト、スキル、ツール、メモリなどの「harness」を、固定ベンチマークではなく変化し続けるタスク列に対して継続的に改善するための Adaptive Auto-Harness を提案した論文。
-- **先行研究と比べてどこがすごい？**: A-Evolve、GEPA、Meta-Harness など既存の auto-harness は固定されたオフライン評価を主対象にしているのに対し、本研究は履歴が増え続け、タスク種別が混在し、分布が時間変化する実運用的な設定を扱う。単一harnessを高頻度に更新し続けると早期にピークを迎えて劣化する、という問題設定が新しい。
-- **技術や手法の肝はどこ？**: オラクルharnessとの差を **evolution loss** と **adaptation loss** に分解し、それぞれに対して stateful multi-agent evolver、harness tree、solve-time routing、人間による steering hook を組み合わせる点。単一の万能harnessを育てるのではなく、タスクごとに適応・経路選択する設計が中心。
-- **どうやって有効だと検証した？**: prediction-market、security-competition、event-forecasting のタスクストリームで評価し、5つの既存 auto-harness ベースラインおよび ablation と比較したとされる。PDF本文がないため、具体的なデータセット規模、指標、数値差、統計的有意性はメタデータからは不明。
-- **議論はある？**: PDF本文がないため詳細な限界議論は不明。abstractから見る限り、履歴に十分な信号がない場合は human-steering hooks に依存するため、人間介入のコスト、再現性、介入基準の標準化が論点になりそう。harness tree と routing の失敗時にどの程度性能劣化するかも要確認。
-- **次に読む/試すなら**: GitHub実装を確認して harness tree と routing の実装単位を見る。既存の A-Evolve / GEPA / Meta-Harness との比較条件を確認する。小さな時系列タスク列を作り、単一harness更新と task-wise routing の差を再現する。
-- **キーワード**: `LLM agents`, `auto-harness`, `self-improvement`, `open-ended task streams`, `harness routing`, `human steering`
+- **ひとことでいうと**: 固定ベンチマークではなく、分布が変化し続けるオープンエンドなタスク列に対して、LLMエージェントのプロンプト・ツール・記憶・スキルなどの「harness」を継続的に自己改善する枠組みを提案した論文。
+- **先行研究と比べてどこがすごい？**: A-Evolve、GEPA、Meta-Harnessのような既存のauto-harness系は主に固定されたオフラインベンチマークで評価されるが、この論文は実運用に近い「履歴が増え続ける」「タスクが異質」「分布が時間変化する」状況を問題化している。単一harnessを高頻度に更新し続けると、初期に精度がピークを迎えた後に劣化するという脆さに対して、タスク単位の適応とルーティングを導入している点が新規性。
+- **技術や手法の肝はどこ？**: oracle harnessとの差を「evolution loss」と「adaptation loss」に分解し、それぞれに対して、状態を持つmulti-agent evolver、solve-time routing付きのharness tree、人間が必要箇所に介入できるsteering hooksを組み合わせる。単一の万能harnessを更新し続けるのではなく、タスク特性に応じて複数のharnessを構築・選択する設計が中心。
+- **どうやって有効だと検証した？**: abstractベースでは、prediction market、security competition、event forecastingのタスクストリームで評価し、5つの既存auto-harnessベースラインおよびablationと比較したとされる。各構成要素の寄与として、construction、routing、targeted human steeringが性能向上に効いたと説明されている。PDF本文がないため、具体的なデータセット規模、指標、数値差、統計的検定はメタデータからは不明。
+- **議論はある？**: PDF本文がないため詳細な限界は不明。ただしabstractから見る限り、人間のsteering hooksにどの程度依存するか、harness treeの肥大化や運用コスト、分布変化検知の失敗時の挙動、既存ベースラインとの計算資源差が論点になりそう。細かな再現性や実装条件もメタデータからは不明。
+- **次に読む/試すなら**: GitHubの実装を確認してharness treeとroutingの実装粒度を見る。A-Evolve、GEPA、Meta-Harnessとの違いを表にする。自分のエージェント評価環境で、固定ベンチではなく時系列タスク列を作って劣化曲線を再現する。
+- **キーワード**: `auto-harness`, `LLM agents`, `self-improvement`, `open-ended task streams`, `harness routing`, `human steering`
 
 ## 気になったこと
 
-- harness tree のノードは何を単位に分岐するのか。タスククラスタ、性能履歴、プロンプト差分、ツール構成のどれが主軸か。
-- solve-time routing は教師あり分類なのか、LLM判断なのか、過去性能ベースの検索なのか。
-- human-steering hooks はどの頻度で必要になり、完全自動化との差はどの程度か。
-- 「単一harnessは早期ピーク後に劣化する」という主張の実験条件と再現性を確認したい。
-- prediction market / security competition / event forecasting 以外の、よりソフトウェア開発寄りのストリームにも効くか。
+- evolution lossとadaptation lossがどのように定義・推定されているのか。
+- harness treeのノード分岐基準とsolve-time routingは、学習器なのかヒューリスティックなのか。
+- 「accuracy peaks early and then declines」という現象が、どのベースライン・どのタスクでどれくらい強く出るのか。
+- human-steering hooksが性能を上げるとして、その介入量・タイミング・コストはどう測られているのか。
+- オープンエンドなタスクストリーム評価をどう標準化できるか。
 
 ## そのまま聞ける質問
 
