@@ -100,7 +100,7 @@ pull_latest_if_enabled() {
     return 0
   fi
   echo "[0/8] Pulling latest origin/$branch..."
-  git pull --rebase origin "$branch"
+  git pull --rebase --autostash origin "$branch"
 }
 
 push_markdown_outputs() {
