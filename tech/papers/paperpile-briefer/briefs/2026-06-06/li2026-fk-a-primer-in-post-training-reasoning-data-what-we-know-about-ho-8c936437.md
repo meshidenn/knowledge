@@ -5,24 +5,24 @@
 - **タイトル**: A primer in post-training reasoning data: What we know about how it works
 - **著者**: Yaoming Li, Guangxiang Zhao, Qilong Shi, Lin Sun, Xiangzheng Zhang, Tong Yang
 - **年 / venue**: 2026 / arXiv [cs.CL]
-- **リンク**: DOI・arXiv ID・URLはメタデータからは不明
+- **リンク**: https://arxiv.org/abs/2606.02113 / arXiv:2606.02113
 
 ## 落合陽一フォーマット
 
-- **ひとことでいうと**: 大規模推論モデルの性能を左右する「ポストトレーニング用推論データ」について、公開研究・システム報告を横断的に整理したサーベイ/入門論文。
-- **先行研究と比べてどこがすごい？**: 個別のデータセット、RLレシピ、報酬モデル、ベンチマーク、 frontier system report に散らばっていた知見を、150本以上の公開研究・報告をもとに「推論データ」という観点から統合している点。抽象的な訓練手法ではなく、何のデータが効くのかに焦点を当てている。
-- **技術や手法の肝はどこ？**: 分野を4つの問いで整理していること。すなわち、どんなデータオブジェクトが存在するか、何がそのデータを有用にするか、どう構築されるか、どのようにスケールするか。この枠組みを通じて、今後の reasoning-data release や post-training recipe を評価・帰属するための見取り図を作っている。
-- **どうやって有効だと検証した？**: PDF本文がなく、メタデータ上はサーベイ論文であることしか確認できないため、独自実験や定量評価の有無はメタデータからは不明。abstract上は150以上の公開研究・システム報告の統合が主な根拠。
-- **議論はある？**: PDF本文がないため詳細な限界は不明。ただしメタデータから見える論点として、公開研究・公開レポートに依存するため、非公開の frontier model training data や内部アブレーションの知見は十分に扱えない可能性がある。また、推論データの「有用性」をどう因果的に切り分けるかは難しい。
-- **次に読む/試すなら**: 1. 本文PDFを取得して4分類の詳細と引用リストを確認する。2. 自分のLLM post-training実験に対して、データを「object / usefulness / construction / scaling」の4軸で棚卸しする。3. reasoning data の品質指標、合成データ生成、RL報酬設計に関する引用先を追う。
-- **キーワード**: `post-training`, `reasoning data`, `large reasoning models`, `reinforcement learning`, `reward models`, `survey`
+- **ひとことでいうと**: LLMの推論能力を伸ばすポストトレーニング用データについて、150本以上の公開研究・システム報告を整理し、「どんなデータか」「何が有用性を決めるか」「どう作るか」「どうスケールするか」を帰属可能にするためのサーベイ。
+- **先行研究と比べてどこがすごい？**: データセット、RLレシピ、報酬モデル、ベンチマーク、フロンティアモデル報告に散らばっていた知見を、「prompt-responseペア」ではなく「verifier-bearing feedback interface」として再定義している点。長いCoT、難しい問題、大量データ、成功軌跡、optimizerの違いといった直感的説明を疑い、検証器・ベースモデル・系譜・scaffold・推論予算まで含めた帰属フレームに落としている。
+- **技術や手法の肝はどこ？**: 推論データをドメイン別ではなく、検証契約で分類する。具体的には、プログラム実行や証明で検証できるデータ、環境との相互作用で検証できるエージェントデータ、人間/LLM judgeやrubricが必要なデータに分ける。その上で、正しさはverifier相対、難しさはbase model相対、trace品質はtrajectory相対、coverageはlineage相対だと整理する。
+- **どうやって有効だと検証した？**: 新しいモデル訓練や独自実験ではなく、PDF本文では150本以上の公開研究・技術報告をレビューし、DeepMath-103K、DAPO、PRM800K、Math-Shepherd、OpenThoughts、DeepSeek-R1、Qwen3、Kimi K1.5などの事例から共通する設計変数と落とし穴を抽出している。したがって有効性はメタ分析的な整理であり、著者ら自身がレシピを再実行して性能比較したものではない。
+- **議論はある？**: 限界は明確で、閉じた商用パイプライン、非公開データ混合、未公開のverifier version、compute/inference budget、contamination auditは扱えない。さらに、サーベイは形式的なメタ分析ではなく、peer-reviewed paper、arXiv、technical report、model cardが混在する。各verifierの妥当性や汚染の有無も独立検証していない。
+- **次に読む/試すなら**: DeepMath-103K、DAPO、OpenThoughtsのデータ構築レシピを比較する。自分の推論データセットに対して、verifier、base pass-rate、lineage、filter、inference budgetのメタデータ表を作る。長いCoTではなく「どの時点でどの検証信号が入るか」で既存データを再分類する。
+- **キーワード**: `post-training`, `reasoning data`, `RLVR`, `verifier`, `chain-of-thought`, `data lineage`, `reward model`, `LLM reasoning`
 
 ## 気になったこと
 
-- 「reasoning data object」として何を分類しているのか。CoT、verifier trace、tool-use trajectory、preference pair、RL rollout などがどう整理されているか確認したい。
-- データの有用性を、正解率・多様性・難易度・検証可能性・探索性のどれで説明しているのか。
-- スケーリング則について、データ量、問題難易度、モデルサイズ、RLステップ数のどれを主変数として扱っているのか。
-- 公開モデルと frontier system report の知見を同じ枠組みに入れるとき、どの程度まで再現可能性を担保しているのか。
+- 「verifier-bearing sample」という単位を、実際のPaperpile/Obsidian内の論文管理メタデータにどう落とすと再利用しやすいか。
+- RLVRの改善が「新能力の獲得」なのか「base policy内の到達可能軌跡の強化」なのかを、最小実験でどう切り分けるか。
+- エージェント軌跡では、成功ログだけでなく失敗・retry・状態差分を保存すべきという主張を、SWE-agentやtool-use評価でどう実装するか。
+- closed modelの報告を含むサーベイなので、実際に再現可能なopen recipeだけに絞った二次リストが欲しい。
 
 ## そのまま聞ける質問
 

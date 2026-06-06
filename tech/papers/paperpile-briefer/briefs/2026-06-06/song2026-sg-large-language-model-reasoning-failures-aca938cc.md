@@ -3,26 +3,26 @@
 ## 基本情報
 
 - **タイトル**: Large language model reasoning failures
-- **著者**: Song, Peiyang; Han, Pengrui; Goodman, Noah
-- **年 / venue**: 2026 / arXiv [cs.AI]
-- **リンク**: GitHub repository: https://github.com/Peiyang-Song/Awesome-LLM-Reasoning-Failures
+- **著者**: Peiyang Song, Pengrui Han, Noah Goodman
+- **年 / venue**: 2026 / Transactions on Machine Learning Research, arXiv [cs.AI]
+- **リンク**: https://arxiv.org/abs/2602.06176 / PDF: https://arxiv.org/pdf/2602.06176.pdf / GitHub: https://github.com/Peiyang-Song/Awesome-LLM-Reasoning-Failures
 
 ## 落合陽一フォーマット
 
-- **ひとことでいうと**: LLMの推論失敗を体系的に整理し、失敗の種類・原因・緩和策を分類するサーベイ論文。
-- **先行研究と比べてどこがすごい？**: メタデータ上の主張では、LLMの推論失敗に特化した初の包括的サーベイ。推論を「身体性を伴う推論」と「非身体的推論」に分け、さらに非身体的推論を直感的・非形式的推論と論理的・形式的推論に分ける枠組みを提示している点が差分。
-- **技術や手法の肝はどこ？**: 推論能力そのものの分類軸と、推論失敗の分類軸を分けて整理すること。失敗は、LLMアーキテクチャに内在する根本的失敗、特定応用領域で現れる制約、入力の小さな変化に対する頑健性問題の3種類に分類される。
-- **どうやって有効だと検証した？**: PDF本文がなく、abstractベースのため詳細は不明。各失敗について定義、既存研究の分析、根本原因、緩和策を整理したサーベイとして有効性を示していると読めるが、実験ベンチマークや定量評価の有無はメタデータからは不明。
-- **議論はある？**: サーベイであるため、分類枠組みの網羅性や境界の曖昧さが論点になりそう。個別失敗の原因がモデル構造由来なのか、データ・評価設計・プロンプト依存なのかをどこまで切り分けられているかはメタデータからは不明。
-- **次に読む/試すなら**: GitHubリポジトリの分類一覧を確認する。自分の対象タスクが「fundamental」「application-specific」「robustness」のどれに当たるか対応づける。代表的な失敗例を1つ選び、手元のLLMで最小再現プロンプトを作る。
-- **キーワード**: `LLM reasoning`, `reasoning failure`, `survey`, `robustness`, `formal reasoning`, `embodied reasoning`
+- **ひとことでいうと**: LLMの「推論ができない瞬間」を、非身体的推論と身体的推論、さらに基本的失敗・応用上の限界・ロバスト性問題という2軸で整理したサーベイ論文。
+- **先行研究と比べてどこがすごい？**: 個別の失敗事例ではなく、LLM reasoning failures そのものを主題にした包括的サーベイとして、認知バイアス、論理、数学、コード、物理常識、視覚空間、ロボット計画までを同じ分類枠で接続している点が新しい。失敗を「性能が低い」だけでなく「小さな摂動で出力が揺れる」問題として扱う設計も重要。
+- **技術や手法の肝はどこ？**: 推論を embodied / non-embodied に分け、non-embodied を informal / formal に細分化する。その上で、失敗を fundamental failures、application-specific limitations、robustness issues に分類する。各失敗について定義、既存研究、原因仮説、緩和策を並べ、LLMの弱点を横断的に見える形にしている。
+- **どうやって有効だと検証した？**: 新しい実験ベンチマークを主に提案する論文ではなく、既存研究の体系的整理が主眼。PDF本文では、ワーキングメモリ、抑制制御、認知バイアス、reversal curse、構成的推論、数え上げ、算術、数学文章題、物理常識、2D/3D空間推論、ロボット計画などの既存評価研究を整理している。
+- **議論はある？**: 根本原因分析が未完成な失敗が多い。特に構成的推論、高次Theory of Mind、2D/3D物理常識、マルチエージェント計画では、観察された失敗と内部機構の対応がまだ弱い。また、既存文献に依存するため、研究されやすい失敗領域に偏りがある。マルチターン・インタラクティブな現実的状況はまだ不足している。
+- **次に読む/試すなら**: 1. GitHubリポジトリで失敗事例リストを確認する。 2. 自分のLLM評価に、言い換え・順序変更・変数名変更などの摂動テストを入れる。 3. 自分の用途を fundamental / limitation / robustness のどれに弱いか分類して評価項目を作る。
+- **キーワード**: `LLM reasoning`, `reasoning failures`, `robustness`, `embodied reasoning`, `formal reasoning`, `cognitive bias`, `benchmarking`
 
 ## 気になったこと
 
-- 「embodied reasoning」と「non-embodied reasoning」の境界は、マルチモーダルLLMやロボティクスではどのように扱われているのか。
-- 根本的失敗と頑健性問題は独立分類なのか、それとも同じ現象を別角度から見ているのか。
-- 緩和策として、プロンプト工夫、外部ツール、検証器、探索、学習時の改善のどれが中心に整理されているのか。
-- 公開GitHubリポジトリがどの粒度で論文を分類しているか確認したい。
+- 「失敗分類」は実務評価にかなり使えそうだが、各カテゴリをどの粒度でテストケース化すれば十分か。
+- reasoning-specialized models に対して、古い失敗事例がどれだけ残存しているかを継続測定するベンチマークが必要。
+- 物理・ロボット・マルチエージェント系の失敗は、単純なプロンプト改善よりも world model、シミュレータ、フィードバック制御との統合が本筋に見える。
+- 「推論失敗」を性能ランキングではなく、事故分析・故障分類として扱う視点は、AIエージェント評価にも転用できそう。
 
 ## そのまま聞ける質問
 
