@@ -110,6 +110,7 @@ push_markdown_outputs() {
   fi
   stage_if_inside_repo "$OUTPUT_DIR"
   stage_if_inside_repo "$CHAT_DIR"
+  stage_if_inside_repo "$LOG_DIR"
   if ! git diff --staged --quiet; then
     git commit -m "paperpile brief: $DATE"
     git push
@@ -159,6 +160,7 @@ if [ "$PAPER_COUNT" -eq 0 ]; then
   } >> "$ACTIVITY_LOG"
   uv run scripts/update_index.py --briefs-dir "$OUTPUT_DIR" --chat-dir "$CHAT_DIR"
   copy_to_obsidian
+  push_markdown_outputs
   notify_mobile "Paperpile Brief $DATE" "新しく追加された論文はありません。記録は logs/activity.md に追記しました。"
   echo "[OK] No new papers"
   exit 0

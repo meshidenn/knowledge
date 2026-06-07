@@ -84,9 +84,9 @@ uv run scripts/bootstrap_seen.py --export "$PAPERPILE_EXPORT_PATH" --state ./sta
 PUSH_TO_GIT=true
 ```
 
-この場合、`run_daily.sh`は実行前に現在ブランチの`origin`を`git pull --rebase`し、生成後に`briefs/`と`chat/`だけをcommit/pushします。pushが成功した後に`state/seen.json`を更新するため、GitHub同期に失敗した論文を処理済みにしません。
+この場合、`run_daily.sh`は実行前に現在ブランチの`origin`を`git pull --rebase`し、生成後に`briefs/`、`chat/`、`logs/activity.md`をcommit/pushします。追加論文が0件の日も`logs/activity.md`に記録してGitHubへ同期します。pushが成功した後に`state/seen.json`を更新するため、GitHub同期に失敗した論文を処理済みにしません。
 
-`raw/`と`state/`はローカル運用データとして`.gitignore`対象のままです。Codexでの通常の深掘りは、GitHub経由で同期された`briefs/YYYY-MM-DD.md`と`chat/YYYY-MM-DD/*.md`から始めます。
+`raw/`、`state/`、日別の詳細ログ`logs/YYYY-MM-DD.log`はローカル運用データとして`.gitignore`対象のままです。Codexでの通常の深掘りは、GitHub経由で同期された`briefs/YYYY-MM-DD.md`と`chat/YYYY-MM-DD/*.md`から始めます。
 
 ## 翌朝6時に実行
 

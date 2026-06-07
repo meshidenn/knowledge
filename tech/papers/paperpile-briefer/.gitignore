@@ -1,5 +1,6 @@
 .env
-logs/
+logs/*
+!logs/activity.md
 raw/
 state/
 __pycache__/
